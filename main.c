@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     
     
     for (int i = 0; i < nbLoop; i++) {
-        result = solv(newGame);
+        result = solv(newGame,ANE);
 	printf("Found in %d moves\n",game_nb_moves(result->current));
 #ifdef SHOWPATH
 	printf("Move : %s",result->move);
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     }
     
     
-    for(int i=0;i<10;i++)
+    for(int i=0;i<game_nb_pieces(newGame);i++)
         delete_piece(pieces[i]);
     delete_game(newGame);
     return (EXIT_SUCCESS);

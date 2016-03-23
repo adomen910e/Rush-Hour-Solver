@@ -13,7 +13,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-//#define SHOWPATH
+#define SHOWPATH
+#define RUSH 1
+#define ANE 0
 //Hash table
 typedef struct hashTableChrInt {
     char* key; /* key (string is WITHIN the structure) */
@@ -27,8 +29,7 @@ typedef struct gameStruct {
     struct gameStruct *prev; /* needed for a doubly-linked list only */
     struct gameStruct *next; /* needed for singly- or doubly-linked lists */
 } gameStruct;
-gameStruct *solv(cgame newGame);
-gameStruct *solvList(cgame newGame);
+gameStruct *solv(cgame newGame,int game);
 
 
 #ifdef __cplusplus

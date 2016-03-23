@@ -6,7 +6,7 @@
 
 /* 
  * File:   main.c
- * Author: silvermoon
+ * Author: norips
  *
  * Created on 8 mars 2016, 11:33
  */
@@ -23,7 +23,8 @@
 
 hashTableChrInt *s, *tempH, *hTable = NULL;
 gameStruct *hList = NULL;
-
+typedef bool(*game_over_func)(cgame); /*Pointer to function for game over*/
+game_over_func game_over;
 static bool game_over_an(cgame newGame)
 {
     return get_x(game_piece(newGame, 0)) == 1 && get_y(game_piece(newGame, 0)) == 0;
@@ -90,9 +91,7 @@ bool check_found_else_create(game newGame)
 
 void explore(gameStruct *new)
 {
-#ifdef SHOWPATH
     char *tmp;
-#endif
     for (int i = 0; i < game_nb_pieces(new->current); i++) {
         game tmpGame = new_game_hr(0, NULL);
         copy_game(new->current, tmpGame);
@@ -204,7 +203,7 @@ void explore(gameStruct *new)
     }
 }
 
-gameStruct *solv(cgame newGame)
+gameStruct *solv(cgame newGame,int gameType)
 {
     gameStruct *new = malloc(sizeof (gameStruct));
     game tmp = new_game_hr(0, NULL);
@@ -215,9 +214,20 @@ gameStruct *solv(cgame newGame)
     new->move[0] = 0;
 #endif
     DL_APPEND(hList, new);
+    switch(gameType){
+        case ANE:
+            game_over = game_over_an;
+            break;
+        case RUSH:
+            game_over = game_over_hr;
+            break;
+        default:
+            game_over = game_over_hr;
+            break;
+    }
     do {
         new = hList;
-        if (game_over_an(new->current)) {
+        if (game_over(new->current)) {
             //printf("Found !\n");
             hashTableChrInt *current,*tmp;
             HASH_ITER(hh, hTable, current, tmp) {
@@ -256,10 +266,6 @@ gameStruct *solv(cgame newGame)
 #endif
         delete_game(new->current);
         free(new);
-        
-        //        MLV_delay_according_to_frame_rate();
-
-
     } while (hList);
     return NULL;
 }

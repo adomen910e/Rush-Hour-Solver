@@ -46,11 +46,15 @@ int main(int argc, char** argv)
     pieces[8] = new_piece(0, 1, 1, 2, true, true); // 9
     pieces[9] = new_piece(0, 3, 1, 2, true, true); // 10
     newGame = new_game(4, 5, 10, pieces);
-    gameStruct *result;
+    gameStruct *result=NULL;
     
     
     for (int i = 0; i < nbLoop; i++) {
         result = solv(newGame,ANE);
+        if(!result){
+            printf("Impossible to found a solution !");
+            break;
+        }
 	printf("Found in %d moves\n",game_nb_moves(result->current));
 #ifdef SHOWPATH
 	printf("Move : %s",result->move);

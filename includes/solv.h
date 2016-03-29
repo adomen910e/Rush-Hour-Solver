@@ -10,6 +10,7 @@
 #define SOLV_H
 #include "uthash.h"
 #include "utlist.h"
+#include "game.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

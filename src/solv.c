@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <MLV/MLV_all.h>
 #include "game.h"
 #include "solv.h"
 #include "uthash.h"
@@ -26,12 +25,12 @@ gameStruct *hList = NULL;
 typedef bool(*game_over_func)(cgame); /*Pointer to function for game over*/
 game_over_func game_over;
 
-static bool game_over_an(cgame newGame)
+bool game_over_an(cgame newGame)
 {
     return get_x(game_piece(newGame, 0)) == 1 && get_y(game_piece(newGame, 0)) == 0;
 }
 
-static char* parse(cpiece *arrPieces, int n)
+char* serialize(cpiece *arrPieces, int n)
 {
     char *buf = malloc(n * 12 + 1);
     buf[0] = 0;
@@ -40,7 +39,7 @@ static char* parse(cpiece *arrPieces, int n)
     return buf;
 }
 
-static bool sup(cpiece p1, cpiece p2)
+bool sup(cpiece p1, cpiece p2)
 {
     if (get_x(p1) > get_x(p2)) {
         return true;
@@ -52,7 +51,7 @@ static bool sup(cpiece p1, cpiece p2)
 
 }
 
-static char* convertGame(game newGame)
+char* convertGame(game newGame)
 {
     int n = game_nb_pieces(newGame);
     cpiece *arrPieces;
@@ -70,7 +69,7 @@ static char* convertGame(game newGame)
             }
         }
     }
-    char *parsed = parse(arrPieces, n);
+    char *parsed = serialize(arrPieces, n);
     free(arrPieces);
     return parsed;
 }

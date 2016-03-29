@@ -13,7 +13,10 @@ Binaries are placed to build/bin.
 To get there, you must typing in the terminal `cd build/bin`.
 
 # Play
-To start the solver, you have to go to the bin folder and do `./solv 1` a parameter is required.
-
+To start the solver, you have to go to the bin folder and do `./solv NbOfLoop GameType PathToLevel ` first and second parameters are required.
+GameType are : 
+* 0 = Ane Rouge
+* 1 = Rush Hour
 # TODO
 * Use file to load level
+

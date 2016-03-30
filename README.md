@@ -17,6 +17,4 @@ To start the solver, you have to go to the bin folder and do `./solv NbOfLoop Ga
 GameType are : 
 * 0 = Ane Rouge
 * 1 = Rush Hour
-# TODO
-* Use file to load level
 

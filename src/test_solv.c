@@ -43,7 +43,7 @@ bool test_equality_string(char *expected, char *value, char * msg)
 bool test_solv()
 {
     bool result = true;
-    piece pieces[4];
+    piece pieces[10];
     pieces[0] = new_piece_rh(3, 3, true, true);
     pieces[1] = new_piece_rh(3, 0, true, false);
     pieces[2] = new_piece_rh(4, 1, true, true);
@@ -52,6 +52,32 @@ bool test_solv()
     gameStruct *resultSolv = solv(newGame,RUSH);
     result = result && test_equality_int(game_nb_moves(resultSolv->current),13,"Error on nb of move");
     result = result && test_equality_bool(game_over_hr(resultSolv->current),true,"Game is not over");
+    delete_game(newGame);
+    free(resultSolv);
+    newGame = new_game(6, 6, 4, pieces);
+    resultSolv = solv(newGame,-1);
+    result = result && test_equality_int(game_nb_moves(resultSolv->current),13,"Error on nb of move");
+    result = result && test_equality_bool(game_over_hr(resultSolv->current),true,"Game is not over");
+    
+    for(int i=0;i<game_nb_pieces(newGame);i++){
+        delete_piece(pieces[i]);
+    }
+    delete_game(newGame);
+    free(resultSolv);
+    pieces[0] = new_piece(1, 3, 2, 2, true, true); //Rouge
+    pieces[1] = new_piece(3, 3, 1, 2, true, true); // 2
+    pieces[2] = new_piece(3, 1, 1, 2, true, true); // 3
+    pieces[3] = new_piece(3, 0, 1, 1, true, true); // 4
+    pieces[4] = new_piece(1, 2, 2, 1, true, true); // 5
+    pieces[5] = new_piece(2, 1, 1, 1, true, true); // 6
+    pieces[6] = new_piece(1, 1, 1, 1, true, true); // 7
+    pieces[7] = new_piece(0, 0, 1, 1, true, true); // 8
+    pieces[8] = new_piece(0, 1, 1, 2, true, true); // 9
+    pieces[9] = new_piece(0, 3, 1, 2, true, true); // 10
+    newGame = new_game(4, 5, 10, pieces);
+    resultSolv = solv(newGame,ANE);
+    result = result && test_equality_int(game_nb_moves(resultSolv->current),118,"Error on nb of move");
+    result = result && test_equality_bool(game_over_an(resultSolv->current),true,"Game is not over");
     
     for(int i=0;i<game_nb_pieces(newGame);i++){
         delete_piece(pieces[i]);

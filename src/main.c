@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     for (int i = 0; i < nbLoop; i++) {
         result = solv(newGame,gameType);
         if(!result){
-            printf("Impossible to found a solution !\n");
+            printf("Unable to found a solution !\n");
             delete_game(newGame);
             return EXIT_FAILURE;
         }

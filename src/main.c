@@ -69,11 +69,13 @@ int main(int argc, char** argv)
         result = solv(newGame,gameType);
         if(!result){
             printf("Impossible to found a solution !\n");
+            delete_game(newGame);
             return EXIT_FAILURE;
         }
 	printf("Found in %d moves\n",game_nb_moves(result->current));
 #ifdef SHOWPATH
 	printf("Move : %s",result->move);
+        free(result->move);
 #endif
         delete_game(result->current);
         free(result);

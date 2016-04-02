@@ -120,6 +120,42 @@ void save_or_continue(game tmpGame,gameStruct *new,int nbPiece,int nb_move,char*
     DL_APPEND(hList, newPath);
 }
 
+gameStruct *tear_down(gameStruct *new){
+     hashTableChrInt *current, *tmp;
+
+            HASH_ITER(hh, hTable, current, tmp)
+            {
+                HASH_DEL(hTable, current); /* delete; users advances to next */
+                free(current->key); /* optional- if you want to free  */
+                free(current);
+            }
+            gameStruct *result;
+            result = malloc(sizeof (gameStruct));
+            game tempGame = new_game_hr(0, NULL);
+            copy_game(new->current, tempGame);
+            result->current = tempGame;
+#ifdef SHOWPATH
+            int len = strlen(new->move);
+            result->move = malloc(sizeof (char)*(len + 1));
+            strcpy(result->move, new->move);
+#endif
+            gameStruct *elt, *temp;
+
+            /* now delete each element, use the safe iterator */
+            DL_FOREACH_SAFE(hList, elt, temp)
+            {
+                DL_DELETE(hList, elt);
+#ifdef SHOWPATH
+                free(elt->move);
+#endif
+                delete_game(elt->current);
+                free(elt);
+            }
+            free(hTable);
+            free(hList);
+            return result;
+}
+
 void explore(gameStruct *new)
 {
     for (int i = 0; i < game_nb_pieces(new->current); i++) {
@@ -187,39 +223,7 @@ gameStruct *solv(cgame newGame, int gameType)
         new = hList;
         if (game_over(new->current)) {
             //printf("Found !\n");
-            hashTableChrInt *current, *tmp;
-
-            HASH_ITER(hh, hTable, current, tmp)
-            {
-                HASH_DEL(hTable, current); /* delete; users advances to next */
-                free(current->key); /* optional- if you want to free  */
-                free(current);
-            }
-            gameStruct *result;
-            result = malloc(sizeof (gameStruct));
-            game tempGame = new_game_hr(0, NULL);
-            copy_game(new->current, tempGame);
-            result->current = tempGame;
-#ifdef SHOWPATH
-            int len = strlen(new->move);
-            result->move = malloc(sizeof (char)*(len + 1));
-            strcpy(result->move, new->move);
-#endif
-            gameStruct *elt, *temp;
-
-            /* now delete each element, use the safe iterator */
-            DL_FOREACH_SAFE(hList, elt, temp)
-            {
-                DL_DELETE(hList, elt);
-#ifdef SHOWPATH
-                free(elt->move);
-#endif
-                delete_game(elt->current);
-                free(elt);
-            }
-            free(hTable);
-            free(hList);
-            return result;
+            return tear_down(new);
         }
         explore(new);
         DL_DELETE(hList, new);
@@ -229,5 +233,10 @@ gameStruct *solv(cgame newGame, int gameType)
         delete_game(new->current);
         free(new);
     } while (hList);
+    gameStruct *s;
+    s = tear_down(new);
+    free(s->move);
+    delete_game(s->current);
+    free(s);
     return NULL;
 }

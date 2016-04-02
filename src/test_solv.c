@@ -95,7 +95,7 @@ bool test_parse()
     pieces[0] = new_piece(1, 3, 2, 2, true, true); //Rouge
     pieces[1] = new_piece(3, 3, 1, 2, true, true); // 2
     char *serialized = serialize((cpiece*)pieces,2);
-    result = result && test_equality_string(" 1 3 2 2 1 1 3 3 1 2 1 1",serialized,"Failed to serialize game");
+    result = result && test_equality_string("132211331211",serialized,"Failed to serialize game");
     delete_piece(pieces[0]);
     delete_piece(pieces[1]);
     free(serialized);
@@ -110,7 +110,7 @@ bool test_convertGame()
     pieces[1] = new_piece(1, 3, 2, 2, true, true); //Rouge
     game newGame = new_game(6,6,2,pieces);
     char *converted = convertGame(newGame);
-    result = result && test_equality_string(" 1 3 2 2 1 1 3 3 1 2 1 1",converted,"Failed to serialize game");
+    result = result && test_equality_string("132211331211",converted,"Failed to serialize game");
     delete_piece(pieces[0]);
     delete_piece(pieces[1]);
     delete_game(newGame);

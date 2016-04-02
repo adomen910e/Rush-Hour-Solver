@@ -32,10 +32,17 @@ bool game_over_an(cgame newGame)
 
 char* serialize(cpiece *arrPieces, int n)
 {
-    char *buf = malloc(n * 12 + 1);
+    char *buf = malloc(n * 6 + 1);
     buf[0] = 0;
-    for (int i = 0; i < n; i++)
-        sprintf(buf, "%s%2d%2d%2d%2d%2d%2d", buf, get_x(arrPieces[i]), get_y(arrPieces[i]), get_width(arrPieces[i]), get_height(arrPieces[i]), can_move_x(arrPieces[i]), can_move_y(arrPieces[i]));
+    for (int i = 0,j=0; i < n; i++,j+=6){
+        buf[j] = get_x(arrPieces[i]) + '0';
+        buf[j+1] = get_y(arrPieces[i]) + '0';
+        buf[j+2] = get_width(arrPieces[i]) + '0';
+        buf[j+3] = get_height(arrPieces[i]) + '0';
+        buf[j+4] = can_move_x(arrPieces[i]) + '0';
+        buf[j+5] = can_move_y(arrPieces[i]) + '0';
+        buf[j+6] = '\0';
+    }
     return buf;
 }
 

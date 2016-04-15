@@ -20,30 +20,29 @@
 #include "utlist.h"
 
 
+tabGame *t = NULL;
 hashTableChrInt *s, *tempH, *hTable = NULL;
 gameStruct *hList = NULL;
 typedef bool(*game_over_func)(cgame); /*Pointer to function for game over*/
 game_over_func game_over;
 
+
+void create_tab(int n)
+{
+    t = malloc (sizeof(struct tabGame) * 1);
+    t->tab = malloc (sizeof(game) * n);
+    t->nbElem = 0;
+}
+
+void delete_tab(int n)
+{
+    free(t->tab);
+    free(t);
+}
+
 bool game_over_an(cgame newGame)
 {
     return get_x(game_piece(newGame, 0)) == 1 && get_y(game_piece(newGame, 0)) == 0;
-}
-
-char* serialize(cpiece *arrPieces, int n)
-{
-    char *buf = malloc(n * 6 + 1);
-    buf[0] = 0;
-    for (int i = 0,j=0; i < n; i++,j+=6){
-        buf[j] = get_x(arrPieces[i]) + '0';
-        buf[j+1] = get_y(arrPieces[i]) + '0';
-        buf[j+2] = get_width(arrPieces[i]) + '0';
-        buf[j+3] = get_height(arrPieces[i]) + '0';
-        buf[j+4] = can_move_x(arrPieces[i]) + '0';
-        buf[j+5] = can_move_y(arrPieces[i]) + '0';
-        buf[j+6] = '\0';
-    }
-    return buf;
 }
 
 bool sup(cpiece p1, cpiece p2)
@@ -58,42 +57,51 @@ bool sup(cpiece p1, cpiece p2)
 
 }
 
-char* convertGame(game newGame)
+game convertGame(game newGame)
 {
     int n = game_nb_pieces(newGame);
-    cpiece *arrPieces;
+    piece *arrPieces;
+    
     arrPieces = malloc(sizeof (piece) * n);
     for (int i = 0; i < n; i++) {
-        arrPieces[i] = game_piece(newGame, i);
+        arrPieces[i] = new_piece_rh(0,0,0,0);
+        copy_piece(game_piece(newGame,i), arrPieces[i]);
     }
+    
     //Sort
     for (int i = 0; i < (n - 1); i++) {
         for (int j = 0; j < n - i - 1; j++) {
             if (sup(arrPieces[j], arrPieces[j + 1])) {
-                cpiece swap = arrPieces[j];
+                piece swap = arrPieces[j];
                 arrPieces[j] = arrPieces[j + 1];
                 arrPieces[j + 1] = swap;
             }
         }
     }
-    char *parsed = serialize(arrPieces, n);
-    free(arrPieces);
-    return parsed;
+    return new_game(game_width(newGame),game_height(newGame),n,arrPieces);
 }
 
 bool check_found_else_create(game newGame)
 {
-    s = NULL;
-    char *parsedGame = convertGame(newGame);
-    HASH_FIND_STR(hTable, parsedGame, s);
-    if (s == NULL) {
-        tempH = malloc(sizeof (hashTableChrInt));
-        tempH->key = parsedGame;
-        HASH_ADD_STR(hTable, key, tempH);
-        return false;
+    int n = game_nb_pieces(newGame);
+    game final = convertGame(newGame);
+    bool result = true;
+    for(int i=0; i<t->nbElem; ++i){
+        result = true;
+        for(int j=0; j<n; ++j){
+            if(game_piece(t->tab[i],j) != game_piece(newGame,j)){
+                result = false;
+                break;
+            }
+        }
+        if(result == true)
+            return true;
     }
-    free(parsedGame);
-    return true;
+        
+    int nbElem = t->nbElem;
+    t->tab[nbElem] = final;
+    t->nbElem = nbElem +1;
+    return false;
 }
 
 void save_or_continue(game tmpGame,gameStruct *new,int nbPiece,int nb_move,char* direction)

@@ -4,7 +4,7 @@
 #include "solvTest.h"
 #include "game.h"
 
-
+tabGame* t2 = NULL;
 hashTableChrInt *s2, *tempH2, *hTable2 = NULL;
 /**
  * @brief test if value is equal to expected; if not, displays an error message containing msg to standard error output 
@@ -88,20 +88,6 @@ bool test_solv()
 
 }
 
-bool test_parse()
-{
-    bool result = true;
-    piece pieces[2];
-    pieces[0] = new_piece(1, 3, 2, 2, true, true); //Rouge
-    pieces[1] = new_piece(3, 3, 1, 2, true, true); // 2
-    char *serialized = serialize((cpiece*)pieces,2);
-    result = result && test_equality_string("132211331211",serialized,"Failed to serialize game");
-    delete_piece(pieces[0]);
-    delete_piece(pieces[1]);
-    free(serialized);
-    return result;
-}
-
 bool test_convertGame()
 {
     bool result = true;
@@ -109,12 +95,16 @@ bool test_convertGame()
     pieces[0] = new_piece(3, 3, 1, 2, true, true); // 2 
     pieces[1] = new_piece(1, 3, 2, 2, true, true); //Rouge
     game newGame = new_game(6,6,2,pieces);
-    char *converted = convertGame(newGame);
-    result = result && test_equality_string("132211331211",converted,"Failed to serialize game");
+    
+    game final = convertGame(newGame);
+    
+    result = result && test_equality_int(1,get_x(game_piece(final,0)),"Failed to serialize game");
+    result = result && test_equality_int(3,get_y(game_piece(final,0)),"Failed to serialize game");
+    result = result && test_equality_int(3,get_x(game_piece(final,1)),"Failed to serialize game");
+    result = result && test_equality_int(3,get_y(game_piece(final,1)),"Failed to serialize game");
     delete_piece(pieces[0]);
     delete_piece(pieces[1]);
     delete_game(newGame);
-    free(converted);
     return result;
 }
 
@@ -122,38 +112,28 @@ bool test_check_found_else_create()
 {
     bool result = true;
     piece pieces[2];
-    pieces[0] = new_piece(3, 3, 1, 2, true, true); // 2 
+    pieces[0] = new_piece(3, 3, 1, 2, true, true); // 2
     pieces[1] = new_piece(1, 3, 2, 2, true, true); //Rouge
     game newGame = new_game(6,6,2,pieces);
-    tempH2 = malloc(sizeof (hashTableChrInt));
-    tempH2->key = convertGame(newGame);
-    HASH_FIND_STR(hTable2, tempH2->key, s2);
-    result = result && test_equality_adress(NULL,s2,"Game found this is an error");
-    HASH_ADD_STR(hTable2, key, tempH2);
-    HASH_FIND_STR(hTable2, tempH2->key, s2);
-    result = result && test_equality_string(tempH2->key,s2->key,"Game not found game this is an error");
+    result = result && test_equality_adress(NULL,t2,"Game found this is an error");
+    create_tab(10);
+    result = result && test_equality_bool(false,check_found_else_create(newGame),"Game found game this is an error");
+    result = result && test_equality_bool(true,check_found_else_create(newGame),"Game not found game this is an error");
     delete_piece(pieces[0]);
     delete_piece(pieces[1]);
     delete_game(newGame);
-    hashTableChrInt *current, *tmp;
+    delete_tab(10);
 
-    HASH_ITER(hh, hTable2, current, tmp)
-    {
-        HASH_DEL(hTable2, current); /* delete; users advances to next */
-        free(current->key); /* optional- if you want to free  */
-        free(current);
-    }
+    
     return result;
 }
 
 int main(int argc, char *argv[])
 {
     bool result = true;
-    
-    result = result && test_equality_bool(true, test_parse(), "test_parse");
     result = result && test_equality_bool(true, test_convertGame(), "test_convertGame");
     result = result && test_equality_bool(true, test_check_found_else_create(), "test_check_found_else_create");
-    result = result && test_equality_bool(true, test_solv(), "test_solv");
+    //result = result && test_equality_bool(true, test_solv(), "test_solv");
     if (result) {
         printf("Youpi !\n");
         return EXIT_SUCCESS;

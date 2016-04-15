@@ -17,6 +17,13 @@ extern "C" {
 #define SHOWPATH
 #define RUSH 1
 #define ANE 0
+    
+//Structure tab
+typedef struct tabGame {
+    game * tab;
+    int nbElem;
+} tabGame;
+    
 //Hash table
 typedef struct hashTableChrInt {
     char* key; /* key (string is WITHIN the structure) */

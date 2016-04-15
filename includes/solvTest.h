@@ -18,10 +18,12 @@
 extern "C" {
 #endif
 
+void create_tab(int n);
+void delete_tab();
 bool game_over_an(cgame newGame);
 char* serialize(cpiece *arrPieces, int n);
 bool sup(cpiece p1, cpiece p2);
-char* convertGame(game newGame);
+game convertGame(game newGame);
 bool check_found_else_create(game newGame);
 void save_or_continue(game tmpGame,gameStruct *new,int nbPiece,int nb_move,char* direction);
 void explore(gameStruct *new);

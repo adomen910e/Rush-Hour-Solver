@@ -122,7 +122,7 @@ bool test_check_found_else_create()
     delete_piece(pieces[0]);
     delete_piece(pieces[1]);
     delete_game(newGame);
-    delete_tab(10);
+    delete_tab();
 
     
     return result;

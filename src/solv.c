@@ -34,7 +34,7 @@ void create_tab(int n)
     t->nbElem = 0;
 }
 
-void delete_tab(int n)
+void delete_tab()
 {
     free(t->tab);
     free(t);

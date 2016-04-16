@@ -89,7 +89,7 @@ bool check_found_else_create(game newGame)
     for(int i=0; i<t->nbElem; ++i){
         result = true;
         for(int j=0; j<n; ++j){
-            if(game_piece(t->tab[i],j) != game_piece(final,j)){
+            if(memcmp(game_piece(t->tab[i],j), game_piece(final,j), sizeof(game)) == 1){
                 result = false;
                 break;
             }

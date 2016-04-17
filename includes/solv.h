@@ -22,6 +22,7 @@ extern "C" {
 typedef struct tabGame {
     game * tab;
     int nbElem;
+    int physicalSize;
 } tabGame;
     
 //Hash table

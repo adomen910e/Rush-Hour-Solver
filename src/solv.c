@@ -136,7 +136,12 @@ static bool samePiecesInGame(game convertedGame, game storedGame, int pieceIndex
   cpiece p1 = game_piece(storedGame,pieceIndex);
   cpiece p2 = game_piece(convertedGame,pieceIndex);
   
-   return memcmp(p1,p2, sizeof(cpiece*)) == 0;
+  return    get_x(p1) == get_x(p2) &&
+            get_y(p1) == get_y(p2) &&
+            get_height(p1) == get_height(p2) &&
+            get_width(p1) == get_width(p2) &&
+            can_move_x(p1) == can_move_x(p2) &&
+            can_move_y(p1) == can_move_y(p2);;
 }
 
 

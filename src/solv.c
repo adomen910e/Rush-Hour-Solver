@@ -21,9 +21,14 @@
 
 
 tabGame *t = NULL;
-hashTableChrInt *s, *tempH, *hTable = NULL;
+
+//hashTableChrInt *s, *tempH, *hTable = NULL;
+
+
 gameStruct *hList = NULL;
+
 typedef bool(*game_over_func)(cgame); /*Pointer to function for game over*/
+
 game_over_func game_over;
 
 
@@ -31,6 +36,7 @@ void create_tab(int n)
 {
     t = malloc (sizeof(struct tabGame) * 1);
     t->tab = malloc (sizeof(game) * n);
+    t->physicalSize = n;
     t->nbElem = 0;
 }
 
@@ -38,6 +44,49 @@ void delete_tab()
 {
     free(t->tab);
     free(t);
+}
+
+static void addNewConfiguration(game convertedGame)
+{
+  if(t->nbElem+1 == t->physicalSize)
+    {
+      t->tab = realloc (t->tab, t->physicalSize*2);
+      t->physicalSize *=2;
+    }
+
+  t->tab[t->nbElem++] = convertedGame;
+}
+
+
+static gameStruct *tear_down(gameStruct *new){
+  delete_tab();
+
+  gameStruct *result;
+  result = malloc(sizeof (gameStruct));
+  game tempGame = new_game_hr(0, NULL);
+  copy_game(new->current, tempGame);
+  result->current = tempGame;
+
+#ifdef SHOWPATH
+            int len = strlen(new->move);
+            result->move = malloc(sizeof (char)*(len + 1));
+            strcpy(result->move, new->move);
+#endif
+            gameStruct *elt, *temp;
+
+            /* now delete each element, use the safe iterator */
+            DL_FOREACH_SAFE(hList, elt, temp)
+            {
+                DL_DELETE(hList, elt);
+#ifdef SHOWPATH
+                free(elt->move);
+#endif
+                delete_game(elt->current);
+                free(elt);
+            }
+
+            free(hList);
+            return result;
 }
 
 bool game_over_an(cgame newGame)
@@ -81,166 +130,154 @@ game convertGame(game newGame)
     return new_game(game_width(newGame),game_height(newGame),n,arrPieces);
 }
 
+
+static bool samePiecesInGame(game convertedGame, game storedGame, int pieceIndex)
+{
+  cpiece p1 = game_piece(storedGame,pieceIndex);
+  cpiece p2 = game_piece(convertedGame,pieceIndex);
+  
+   return memcmp(p1,p2, sizeof(cpiece*)) == 0;
+}
+
+
+static bool sameGameConfiguration(game convertedGame, game storedGame)
+{
+  int n = game_nb_pieces(storedGame);
+
+  for(int j=0; j < n; ++j)
+    if(!samePiecesInGame(convertedGame, storedGame, j))
+	return false;
+
+    return true;
+}
+
+
 bool check_found_else_create(game newGame)
 {
-    int n = game_nb_pieces(newGame);
-    game final = convertGame(newGame);
-    bool result = true;
-    for(int i=0; i<t->nbElem; ++i){
-        result = true;
-        for(int j=0; j<n; ++j){
-            if(memcmp(game_piece(t->tab[i],j), game_piece(final,j), sizeof(game)) == 1){
-                result = false;
-                break;
-            }
-        }
-        if(result == true)
-            return true;
+    game convertedGame = convertGame(newGame);
+
+    for(int i=0; i< t->nbElem; ++i){
+      if(sameGameConfiguration(convertedGame, t->tab[i]))
+	return true;
     }
         
-    int nbElem = t->nbElem;
-    t->tab[nbElem] = final;
-    t->nbElem = nbElem +1;
+    addNewConfiguration(convertedGame);
     return false;
+}
+
+
+static void writePath(gameStruct *new,int nbPiece,int nb_move,char* direction,gameStruct *newPath)
+{
+  char *tmp;
+  tmp = malloc(strlen(new->move) * sizeof (char) + 
+	       (strlen(" 00 \n") + strlen(direction)) * sizeof (char) * nb_move +
+	       1 * sizeof (char));
+
+  if (!tmp || !newPath) 
+    printf("Memory allocation error");
+
+  sprintf(tmp, "%s", new->move);
+
+  for (int j = 0; j < nb_move; j++) 
+    sprintf(tmp, "%s %d %s\n", tmp, nbPiece,direction);
+
+  newPath->move = tmp;
 }
 
 void save_or_continue(game tmpGame,gameStruct *new,int nbPiece,int nb_move,char* direction)
 {
-    char *tmp;
-    if (check_found_else_create(tmpGame)) {
+    if (check_found_else_create(tmpGame)) 
         return;
-    }
     gameStruct *newPath = malloc(sizeof (gameStruct));
+
 #ifdef SHOWPATH
-    tmp = malloc(strlen(new->move) * sizeof (char) + (strlen(" 00 \n") + strlen(direction)) * sizeof (char) * nb_move + 1 * sizeof (char));
-    if (!tmp || !newPath) {
-        printf("Memory allocation error");
-    }
-    sprintf(tmp, "%s", new->move);
-    for (int j = 0; j < nb_move; j++) {
-        sprintf(tmp, "%s %d %s\n", tmp, nbPiece,direction);
-    }
-    newPath->move = tmp;
+    writePath(new,nbPiece,nb_move,direction, newPath);
 #endif
+
     game tmpGame2 = new_game_hr(0, NULL);
+
     copy_game(tmpGame, tmpGame2);
     newPath->current = tmpGame2;
     DL_APPEND(hList, newPath);
 }
 
-gameStruct *tear_down(gameStruct *new){
-     hashTableChrInt *current, *tmp;
 
-            HASH_ITER(hh, hTable, current, tmp)
-            {
-                HASH_DEL(hTable, current); /* delete; users advances to next */
-                free(current->key); /* optional- if you want to free  */
-                free(current);
-            }
-            gameStruct *result;
-            result = malloc(sizeof (gameStruct));
-            game tempGame = new_game_hr(0, NULL);
-            copy_game(new->current, tempGame);
-            result->current = tempGame;
-#ifdef SHOWPATH
-            int len = strlen(new->move);
-            result->move = malloc(sizeof (char)*(len + 1));
-            strcpy(result->move, new->move);
-#endif
-            gameStruct *elt, *temp;
+static void movePieceInDirection(gameStruct *new, int pieceNumber, dir d, char *directionName)
+{
+  game tmpGame = new_game_hr(0, NULL);
+  copy_game(new->current, tmpGame);
+  int nb_move = 1;
 
-            /* now delete each element, use the safe iterator */
-            DL_FOREACH_SAFE(hList, elt, temp)
-            {
-                DL_DELETE(hList, elt);
-#ifdef SHOWPATH
-                free(elt->move);
-#endif
-                delete_game(elt->current);
-                free(elt);
-            }
-            free(hTable);
-            free(hList);
-            return result;
+  while (play_move(tmpGame, pieceNumber, d, 1)) {
+    save_or_continue(tmpGame,new,pieceNumber,nb_move,directionName);
+    nb_move++;
+  }
+
+  delete_game(tmpGame);
 }
 
-void explore(gameStruct *new)
+
+static void explore(gameStruct *new)
 {
     for (int i = 0; i < game_nb_pieces(new->current); i++) {
-        game tmpGame = new_game_hr(0, NULL);
-        copy_game(new->current, tmpGame);
-        int nb_move = 1;
-        while (play_move(tmpGame, i, LEFT, 1)) {
-            save_or_continue(tmpGame,new,i,nb_move,"LEFT");
-            nb_move++;
-        }
-        //RESET
-        delete_game(tmpGame);
-        tmpGame = new_game_hr(0, NULL);
-        copy_game(new->current, tmpGame);
-        nb_move = 1;
-        while (play_move(tmpGame, i, RIGHT, 1)) {
-            save_or_continue(tmpGame,new,i,nb_move,"RIGHT");
-            nb_move++;
-        }
-        //RESET
-        delete_game(tmpGame);
-        tmpGame = new_game_hr(0, NULL);
-        copy_game(new->current, tmpGame);
-        nb_move = 1;
-        while (play_move(tmpGame, i, UP, 1)) {
-            save_or_continue(tmpGame,new,i,nb_move,"UP");
-            nb_move++;
-        }
-        //RESET
-        delete_game(tmpGame);
-        tmpGame = new_game_hr(0, NULL);
-        copy_game(new->current, tmpGame);
-        nb_move = 1;
-        while (play_move(tmpGame, i, DOWN, 1)) {
-            save_or_continue(tmpGame,new,i,nb_move,"DOWN");
-            nb_move++;
-        }
-        delete_game(tmpGame);
+      movePieceInDirection(new,i, LEFT, "LEFT");
+      movePieceInDirection(new,i, RIGHT, "RIGHT");
+      movePieceInDirection(new,i, UP, "UP");
+      movePieceInDirection(new,i, DOWN, "DOWN");
     }
+}
+
+static void selectGameType(int gameType)
+{
+  switch (gameType) {
+  case ANE:
+    game_over = game_over_an;
+    break;
+  case RUSH:
+    game_over = game_over_hr;
+    break;
+  default:
+    game_over = game_over_hr;
+    break;
+  }
 }
 
 gameStruct *solv(cgame newGame, int gameType)
 {
-    gameStruct *new = malloc(sizeof (gameStruct));
-    game tmp = new_game_hr(0, NULL);
-    copy_game(newGame, tmp);
-    new->current = tmp;
+
+  create_tab(25000);
+  gameStruct *new = malloc(sizeof (gameStruct));
+  game tmp = new_game_hr(0, NULL);
+
+  copy_game(newGame, tmp);
+  new->current = tmp;
+  
 #ifdef SHOWPATH
     new->move = malloc(sizeof (char)*10);
     new->move[0] = 0;
 #endif
+
+
     DL_APPEND(hList, new);
-    switch (gameType) {
-    case ANE:
-        game_over = game_over_an;
-        break;
-    case RUSH:
-        game_over = game_over_hr;
-        break;
-    default:
-        game_over = game_over_hr;
-        break;
-    }
+    selectGameType(gameType);
     do {
-        new = hList;
-        if (game_over(new->current)) {
-            //printf("Found !\n");
-            return tear_down(new);
-        }
-        explore(new);
-        DL_DELETE(hList, new);
+      new = hList;
+      if (game_over(new->current)) {
+	//printf("Found !\n");
+	return tear_down(new); // ok pour le tear_down
+      }
+      explore(new);
+      DL_DELETE(hList, new);
+
 #ifdef SHOWPATH
-        free(new->move);
+      free(new->move);
 #endif
-        delete_game(new->current);
-        free(new);
+
+      delete_game(new->current);
+      free(new);
+
     } while (hList);
+
     gameStruct *s;
     s = tear_down(new);
     free(s->move);
